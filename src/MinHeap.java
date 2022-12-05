@@ -4,7 +4,7 @@ import java.util.Arrays;
 // USE CASE: I have objects that i normally wouldn't need to compare but now i want to rank them by importance for
 // a priority queue.
 public class MinHeap<E extends Comparable<E>>{
-    private static final int DEFAULT_CAPACITY = 17;
+    private static final int DEFAULT_CAPACITY = 32;
     private static final int ROOT = 0;
     private E[] heap;
     private int size;
@@ -27,13 +27,38 @@ public class MinHeap<E extends Comparable<E>>{
         return size;
     }
     
-    public void insert(E item) {
+    public void add(E data) {
         ensureCapacity();
-        heap[size++] = item;
-         if (size() > 1 ) heapify(size - 1);
+        heap[size++] = data;
+        siftUp();
     }
     
-    private void heapify(int idx) {
+    public void trimToSize() {
+        heap = Arrays.copyOf(heap, size());
+    }
+    private void siftUp() {
+        //fixme quit when parent and child are not swapped
+        int child = size - 1;
+        int parent = parent(child);
+        while (hasParent(child)) {
+            if (hasRightChild(parent)) {
+                E leftChild = heap[leftChild(parent)];
+                E rightChild = heap[rightChild(parent)];
+                child = leftChild.compareTo(rightChild) < 0
+                                ? leftChild(parent)
+                                : rightChild(parent);
+            }
+            else {
+                child = leftChild(parent);
+            }
+            if (heap[child].compareTo(heap[parent]) < 0) {
+                swap(parent, child);
+            }
+            child = parent;
+            parent = parent(parent);
+        }
+    }
+    private void siftDown(int idx) {
         // if not a leaf then it has children
         if(!isLeaf(idx)) {
             int swapIdx = idx;
@@ -50,7 +75,7 @@ public class MinHeap<E extends Comparable<E>>{
             E smallestChild = heap[swapIdx] != null ? heap[swapIdx]: heap[idx];
             if (parent.compareTo(smallestChild) < 0) {
                 swap(idx, swapIdx);
-                heapify(swapIdx);
+                siftDown(swapIdx);
             }
             
         }
@@ -89,11 +114,11 @@ public class MinHeap<E extends Comparable<E>>{
     }
     
     private boolean hasLeftChild(int idx) {
-        return leftChild(idx) <= size;
+        return leftChild(idx) < size;
     }
     
     private boolean hasRightChild(int idx) {
-        return rightChild(idx) <= size;
+        return rightChild(idx) < size;
     }
     
     private boolean isLeaf(int idx) {
